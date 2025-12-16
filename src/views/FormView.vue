@@ -112,7 +112,7 @@ const currentStepData = computed(() => steps[currentStep.value]);
 const progress = computed(() => ((currentStep.value + 1) / steps.length) * 100);
 
 /* --- Payment Logic --- */
-const mpPublicKey = import.meta.env.VITE_MP_PUBLIC_KEY || 'TEST-00000000-0000-0000-0000-000000000000';
+const mpPublicKey = import.meta.env.VITE_MP_PUBLIC_KEY || 'APP_USR-ebd17192-32c4-4db4-8c7b-5db8618d801';
 let brickBuilder = null;
 const pixData = ref(null);
 const showPixModal = ref(false);

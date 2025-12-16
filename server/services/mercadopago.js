@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const client = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN || 'TEST-00000000-0000-0000-0000-000000000000'
+  accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-ebd17192-32c4-4db4-8c7b-5db8618d8013'
 });
 
 const preference = new Preference(client);
