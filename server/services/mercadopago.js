@@ -25,7 +25,7 @@ export const createPreference = async ({ external_reference, price, familyName }
           title: `Site de Natal - ${familyName}`,
           description: 'Criação de site personalizado de Natal para a família',
           quantity: 1,
-          unit_price: price,
+          unit_price: Number(price),
           currency_id: 'BRL'
         }
       ],
