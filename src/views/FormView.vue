@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import { onMounted } from 'vue';
+let pollingInterval = null;
 
 
 const router = useRouter();
@@ -258,7 +259,7 @@ const saveFamilyAndRedirect = async (paymentId) => {
     }
 };
 
-let pollingInterval = null;
+
 
 const checkPixStatus = async () => {
     if (!pixData.value) return;
