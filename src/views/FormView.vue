@@ -256,8 +256,22 @@ const saveFamilyAndRedirect = async (paymentId) => {
 };
 
 const checkPixStatus = async () => {
-    if (pixData.value) {
-        await saveFamilyAndRedirect(pixData.value.paymentId);
+    if (!pixData.value) return;
+    try {
+        loading.value = true;
+        const response = await api.get(`/payment/status/${pixData.value.paymentId}`);
+        const status = response.data.status;
+
+        if (status === 'approved') {
+            await saveFamilyAndRedirect(pixData.value.paymentId);
+        } else {
+            alert("Pagamento ainda não aprovado. Por favor, aguarde alguns instantes.");
+        }
+    } catch (e) {
+        console.error("Erro ao verificar status do pagamento Pix:", e);
+        alert("Erro ao verificar status do pagamento.");
+    } finally {
+        loading.value = false;
     }
 };
 
