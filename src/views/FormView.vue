@@ -298,7 +298,7 @@ const startPolling = () => {
         if (!pixData.value) return;
         console.log("Polling: Verificando status do pagamento Pix...");
         try {
-            const response = await api.get(`/payment/status/${pixData.value.paymentId}`);
+            const response = await api.get(`/payment/${pixData.value.paymentId}`);
             const status = response.data.status;
 
             if (status === 'approved' || status === 'APPROVED') {
