@@ -55,70 +55,38 @@ async function handlePaymentNotification(paymentId) {
   try {
     console.log('Processando notificação de pagamento:', paymentId);
 
-    // VALIDAÇÃO CRÍTICA: Consultar API do Mercado Pago para confirmar status
-    const payment = await getPayment(paymentId);
-
-    if (!payment) {
-      console.error('Pagamento não encontrado no Mercado Pago:', paymentId);
-      return;
-    }
-
-    // Verificar status do pagamento
-    if (payment.status !== 'approved') {
-      console.log('Pagamento não aprovado:', payment.status);
-      return;
-    }
-
-    // VALIDAÇÃO CRÍTICA: Verificar valor pago
-    const paidAmount = payment.transaction_amount;
-    const expectedAmount = SITE_PRICE;
-
-    // Tolerância de 0.01 para diferenças de arredondamento
-    if (Math.abs(paidAmount - expectedAmount) > 0.01) {
-      console.error(`Valor pago (${paidAmount}) não corresponde ao esperado (${expectedAmount})`);
-      return;
-    }
-
-    // Buscar site pelo external_reference (que é o ID do MongoDB)
-    // O external_reference pode estar em payment.external_reference ou na preferência
-    let siteId = payment.external_reference;
-
-    // Se não tiver external_reference direto, buscar pela preferência
-    if (!siteId && payment.preference_id) {
-      const preference = await getPreference(payment.preference_id);
-      siteId = preference.external_reference;
-    }
-
-    if (!siteId) {
-      console.error('External reference não encontrado no pagamento');
-      return;
-    }
-
-    // Buscar site no PostgreSQL
     const localPayment = await prisma.payment.findFirst({
       where: { mp_payment_id: String(paymentId) }
     });
 
     if (!localPayment) {
-      console.error('Pagamento não encontrado no PostgreSQL:', paymentId);
+      console.warn('Pagamento local não encontrado para ID MP:', paymentId);
       return;
     }
+    
+    const mpPayment = await getPayment(paymentId);
 
-    // Atualizar status apenas se ainda estiver PENDING (idempotência)
-    if (localPayment.status !== 'approved') {
+
+    if (mpPayment.status === 'approved' && localPayment.status !== 'approved') {
       await prisma.payment.update({
         where: { id: localPayment.id },
-        data: {
-          status: 'approved',
-          
-          // updatedAt é atualizado automaticamente pelo Prisma
-        }
+        data: { status: 'approved' }
       });
-      console.log(`✅ Site ${localPayment.id} aprovado com sucesso!`);
+      console.log('Pagamento atualizado para aprovado no banco local:', localPayment.id);
     } else {
-      console.log(`Site ${localPayment.id} já estava aprovado anteriormente`);
+      if (localPayment.status !== mpPayment.status) {
+        await prisma.payment.update({
+          where: { id: localPayment.id },
+          data: { status: mpPayment.status }
+        });
+        console.log('Pagamento atualizado no banco local:', localPayment.id, 'Status:', mpPayment.status);
+      } else {
+        console.log('Nenhuma atualização necessária para o pagamento local:', localPayment.id);
+      }
+      
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Erro ao processar pagamento:', error);
   }
 }

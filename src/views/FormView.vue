@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
+import { onMounted } from 'vue';
+
 
 const router = useRouter();
 const currentStep = ref(0);
@@ -178,6 +180,7 @@ const initBrick = async () => {
                             paymentId: responseData.id 
                         };
                         showPixModal.value = true;
+                        startPolling();
                      } else {
                         alert("Pagamento pendente. Verifique seu email.");
                      }
@@ -255,16 +258,28 @@ const saveFamilyAndRedirect = async (paymentId) => {
     }
 };
 
+let pollingInterval = null;
+
 const checkPixStatus = async () => {
     if (!pixData.value) return;
+
+
     try {
         loading.value = true;
-        const response = await api.get(`/payment/status/${pixData.value.paymentId}`);
-        const status = response.data.status;
+        console.log(`Verificando status do pagamento Pix... ID:${pixData.value.paymentId}`);
 
-        if (status === 'approved') {
+
+        const response = await api.get(`/payment/status/${pixData.value.paymentId}`);
+        const pgto = response.data;
+
+        console.log(`Status do pagamento recebido: ${pgto}`);
+
+        if (pgto.status === 'approved' || pgto.status === 'APPROVED') {
+            console.log("Pagamento aprovado! Salvando família e redirecionando...");
+            clearInterval(pollingInterval);
             await saveFamilyAndRedirect(pixData.value.paymentId);
         } else {
+            console.warn(`Pagamento ainda não aprovado. Status: ${pgto.status}`);
             alert("Pagamento ainda não aprovado. Por favor, aguarde alguns instantes.");
         }
     } catch (e) {
@@ -274,6 +289,36 @@ const checkPixStatus = async () => {
         loading.value = false;
     }
 };
+
+
+const startPolling = () => {
+    if (pollingInterval) clearInterval(pollingInterval);
+
+    pollingInterval = setInterval(async () => {
+        if (!pixData.value) return;
+        console.log("Polling: Verificando status do pagamento Pix...");
+        try {
+            const response = await api.get(`/payment/status/${pixData.value.paymentId}`);
+            const status = response.data.status;
+
+            if (status === 'approved' || status === 'APPROVED') {
+                console.log("Pagamento aprovado via polling! Salvando família e redirecionando...");
+                clearInterval(pollingInterval);
+                await saveFamilyAndRedirect(pixData.value.paymentId);
+
+            }
+
+        } catch (e) {
+            console.error("Erro ao verificar status do pagamento via polling:", e);
+        }
+    }, 3000); 
+
+};
+
+
+onMounted(() => {
+    if (pollingInterval) clearInterval(pollingInterval);
+});
 
 /* --- Navigation & Inputs --- */
 const handleNext = () => {
