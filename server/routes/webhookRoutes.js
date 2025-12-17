@@ -95,29 +95,28 @@ async function handlePaymentNotification(paymentId) {
     }
 
     // Buscar site no PostgreSQL
-    const site = await prisma.christmasSite.findUnique({
-      where: { id: siteId }
+    const localPayment = await prisma.payment.findFirst({
+      where: { mp_payment_id: String(paymentId) }
     });
 
-    if (!site) {
-      console.error('Site não encontrado no PostgreSQL:', siteId);
+    if (!localPayment) {
+      console.error('Pagamento não encontrado no PostgreSQL:', paymentId);
       return;
     }
 
     // Atualizar status apenas se ainda estiver PENDING (idempotência)
-    if (site.paymentStatus === 'PENDING') {
-      await prisma.christmasSite.update({
-        where: { id: siteId },
+    if (localPayment.status !== 'approved') {
+      await prisma.payment.update({
+        where: { id: localPayment.id },
         data: {
-          paymentStatus: 'APPROVED',
-          mp_payment_id: paymentId,
+          status: 'approved',
+          
           // updatedAt é atualizado automaticamente pelo Prisma
         }
       });
-
-      console.log(`✅ Site ${siteId} aprovado com sucesso!`);
+      console.log(`✅ Site ${localPayment.id} aprovado com sucesso!`);
     } else {
-      console.log(`Site ${siteId} já estava aprovado anteriormente`);
+      console.log(`Site ${localPayment.id} já estava aprovado anteriormente`);
     }
   } catch (error) {
     console.error('Erro ao processar pagamento:', error);
