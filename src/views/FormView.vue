@@ -269,7 +269,7 @@ const checkPixStatus = async () => {
         console.log(`Verificando status do pagamento Pix... ID:${pixData.value.paymentId}`);
 
 
-        const response = await api.get(`/payment/status/${pixData.value.paymentId}`);
+        const response = await api.get(`/payment/${pixData.value.paymentId}`);
         const pgto = response.data;
 
         console.log(`Status do pagamento recebido: ${pgto}`);
