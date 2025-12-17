@@ -142,7 +142,7 @@ const initBrick = async () => {
       console.log("Configurando e criando novo brick...");
       const settings = {
           initialization: {
-            amount: 14.90,
+            amount: 1,
             payer: { 
                 email: 'cliente@natalfamilia.com',
                 entity_type: 'individual'
