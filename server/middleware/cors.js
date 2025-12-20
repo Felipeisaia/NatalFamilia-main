@@ -4,6 +4,7 @@ import cors from 'cors';
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173', "https://natal-familia-main.vercel.app",
   'http://localhost:5173', // Vite dev server padrão
+  'http://localhost:5174', // Vite dev server alternativo
   'http://localhost:3000', // Caso frontend rode na mesma porta
 ];
 
@@ -19,7 +20,7 @@ export const corsOptions = {
       return callback(null, true);
     }
 
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Não permitido pelo CORS'));
