@@ -3,9 +3,13 @@ import cors from 'cors';
 // Configuração CORS restritiva - permitir apenas domínio do frontend
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173', "https://natal-familia-main.vercel.app",
+  'https://alcefamily.shop', // Domínio de produção
   'http://localhost:5173', // Vite dev server padrão
   'http://localhost:5174', // Vite dev server alternativo
-  'http://localhost:3000', // Caso frontend rode na mesma porta
+  'http://localhost:3000',
+  'https://alcefamily.shop',
+  'https://www.alcefamily.shop',
+   // Caso frontend rode na mesma porta
 ];
 
 // Adicionar domínio de produção se existir
@@ -23,6 +27,7 @@ export const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log('CORS bloqueado para origin:', origin);
       callback(new Error('Não permitido pelo CORS'));
     }
   },

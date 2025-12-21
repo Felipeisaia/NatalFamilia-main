@@ -24,6 +24,8 @@ const familyTimeline = ref([]);
 
 const isPersonalized = computed(() => !!route.params.familyName);
 
+const isReadOnly = computed(() => route.params.familyName === 'Souza-DR3OvV');
+
 onMounted(async () => {
   if (isPersonalized.value) {
     try {
@@ -32,7 +34,7 @@ onMounted(async () => {
       
       try {
 
-        const response = await fetch(`http://api.alcefamily.shop/api/family/${slug}`);
+        const response = await fetch(`https://api.alcefamily.shop/api/family/${slug}`);
         
         if (response.ok) {
           const data = await response.json();
@@ -45,20 +47,20 @@ onMounted(async () => {
           familyWishes.value = Array.isArray(data.wishes) 
             ? data.wishes.map(w => ({
               ...w,
-              image: w.image ? `http://api.alcefamily.shop${w.image}` : null
+              image: w.image ? `https://api.alcefamily.shop${w.image}` : null
             })) 
             : [];
 
           // General Carousel Photos (Simple Paths)
           familyPhotos.value = Array.isArray(data.photos)
-             ? data.photos.map(photo => `http://api.alcefamily.shop${photo}`)
+             ? data.photos.map(photo => `https://api.alcefamily.shop${photo}`)
              : [];
              
           // Timeline Photos (Objects)
           familyTimeline.value = Array.isArray(data.timeline)
             ? data.timeline.map(item => ({
                 ...item,
-                src: `http://api.alcefamily.shop${item.src}`
+                src: `https://api.alcefamily.shop${item.src}`
             }))
             : [];
              
@@ -99,7 +101,7 @@ const handleGiftOpen = () => {
       <MessageSection :text="familyMessage" />
       <WishesTreeSection background-image="/tree.png" :customOrnaments="familyWishes" />
       <TimeCapsuleSection :photos="familyTimeline" />
-      <GuestbookSection />
+      <GuestbookSection :family-slug="route.params.familyName" :read-only="isReadOnly" />
     </main>
 
     <FooterSection :showMarketing="!isPersonalized" />

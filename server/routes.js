@@ -3,6 +3,7 @@ import prisma from './config/prisma.js';
 import { processPayment } from './payment.js';
 import upload from './upload.js';
 import { nanoid } from 'nanoid';
+import { SITE_PRICE } from './config/constants.js';
 
 
 import siteRoutes from './routes/siteRoutes.js';
@@ -35,7 +36,7 @@ router.post('/payment', async (req, res) => {
 
 
     paymentData.description = 'Natal da Família';
-    paymentData.transaction_amount = 14.90;
+    paymentData.transaction_amount = SITE_PRICE;
 
     const mpResponse = await processPayment(paymentData);
 

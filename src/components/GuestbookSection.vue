@@ -1,29 +1,68 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import api from '../services/api.js';
 
-// Dados simulados (depois virão do banco de dados)
+const props = defineProps({
+  familySlug: {
+    type: String,
+    required: true
+  },
+  readOnly: {
+    type: Boolean,
+    default: false
+  }
+});
+
+// Dados do banco de dados
 const messages = ref([]);
 
 const isModalOpen = ref(false);
 const newMessage = ref({ name: '', text: '' });
+const isLoading = ref(false);
 
 const openModal = () => isModalOpen.value = true;
 const closeModal = () => isModalOpen.value = false;
 
-const sendMessage = () => {
+const loadMessages = async () => {
+  try {
+    const response = await api.get(`/capsule/${props.familySlug}`);
+    messages.value = response.data.map(msg => ({
+      id: msg.id,
+      name: msg.sender,
+      text: msg.message,
+      date: new Date(msg.createdAt).toLocaleDateString('pt-BR')
+    }));
+  } catch (error) {
+    console.error('Erro ao carregar mensagens:', error);
+  }
+};
+
+const sendMessage = async () => {
   if (!newMessage.value.name || !newMessage.value.text) return;
   
-  messages.value.unshift({
-    id: Date.now(),
-    name: newMessage.value.name,
-    text: newMessage.value.text,
-    date: 'Agora mesmo'
-  });
-  
-  newMessage.value = { name: '', text: '' };
-  newMessage.value = { name: '', text: '' };
-  closeModal();
+  isLoading.value = true;
+  try {
+    await api.post('/capsule', {
+      familySlug: props.familySlug,
+      sender: newMessage.value.name,
+      message: newMessage.value.text
+    });
+    
+    // Recarregar mensagens após enviar
+    await loadMessages();
+    
+    newMessage.value = { name: '', text: '' };
+    closeModal();
+  } catch (error) {
+    console.error('Erro ao enviar mensagem:', error);
+  } finally {
+    isLoading.value = false;
+  }
 };
+
+onMounted(() => {
+  loadMessages();
+});
 </script>
 
 <template>
@@ -32,7 +71,7 @@ const sendMessage = () => {
       <h2 class="title">Mural do Amor</h2>
       <p class="subtitle">Deixe um pedacinho do seu coração aqui.</p>
       
-      <button class="cta-button" @click="openModal">
+      <button v-if="!props.readOnly" class="cta-button" @click="openModal">
         <span class="icon">✎</span> Deixar Recado
       </button>
     </div>
